@@ -78,6 +78,11 @@ def validate_skill() -> None:
     # Version metadata (semver)
     assert re.search(r'version: "\d+\.\d+\.\d+"', parts[1]), "version metadata is missing"
 
+    # Runtime-audit script is part of the protocol (6-surface matrix "runtime" face)
+    assert (ROOT / "scripts" / "runtime-audit.py").exists(), (
+        "scripts/runtime-audit.py is missing (runtime face of the 6-surface matrix)"
+    )
+
     print(f"PASS: SKILL.md ({len(text.splitlines())} lines, description {len(description)} chars)")
 
 

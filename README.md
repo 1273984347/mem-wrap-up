@@ -23,7 +23,15 @@ session 结束时不收尾 = 结论没验证、经验没沉淀、交接成本转
 
 标准 Agent Skill（`SKILL.md` + `references/`），任何支持 Agent Skills 的客户端都能装。三种方式任选：
 
-**方式 A：直接复制（通用）**
+**方式 A：自然语言安装（推荐）**
+
+在 Claude Code、Codex 等支持 Agent Skills 的工具里，直接说：
+
+```text
+帮我安装这个 skill：https://github.com/1273984347/mem-wrap-up
+```
+
+Agent 会自动 clone 到 skills 目录并注册，不用手动找路径。工具不支持时，手动复制：
 
 ```bash
 git clone https://github.com/1273984347/mem-wrap-up.git

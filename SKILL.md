@@ -91,6 +91,8 @@ metadata:
 | 记忆 | 快照是否仍准确且允许修改？ | user_profile/project_memory/topics、索引 | <状态> |
 | 工作区 | 是否仍有未集成或未审计的残留？ | 会话残留文件、worktree、分支、临时库 | <状态> |
 
+**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。
+
 **判定原则**：
 - 小项目不必硬凑六面：没有部署 → 运行态标 `not-applicable`；无记忆系统 → 记忆面标 `not-applicable`，不编造证据
 - `git status` 干净 / PR 已合并 / 测试通过 ≠ 「全部同步」，必须逐面验证
