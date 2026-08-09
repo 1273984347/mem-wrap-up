@@ -2,6 +2,8 @@
 
 > 7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check → 复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。
 
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 ## 解决什么问题
 
 session 结束时不收尾 = 结论没验证、经验没沉淀、交接成本转嫁给下一个 session。本 skill 把收尾固化为 7 步流水线，重点是两件事：
@@ -45,6 +47,43 @@ npx skills add https://github.com/1273984347/mem-wrap-up
 ## 使用
 
 session 收尾、用户说「收尾 / wrap up」、工作流已沉淀需继续、或文档与代码不一致时触发。
+
+## MCP 接入（可选）
+
+本 skill 与 MCP **互补而非依赖**：MCP 提供外部系统连接，本 skill 负责收尾编排。MCP 作为**可选增强**，无 MCP 时自动回退到内建工具（Grep/Read/Test-Path）。
+
+**典型接入场景**：
+
+| MCP 类型 | 用途 | 增强点 |
+|---|---|---|
+| 服务状态 MCP | 查询部署 / 服务健康 | 6 面状态矩阵「运行态」面的真实证据源 |
+| 通知 MCP（如 IM / 邮件） | 收尾汇报推送 | 分阶段汇报模板的自动化投递 |
+| 数据库 / Schema MCP | 校验 schema 与文档一致性 | 4a 文档同步 spot-check 的独立核对 |
+
+**接入步骤**：
+1. 在你的 agent 配置中启用对应 MCP server；
+2. 在 SKILL.md 的 `compatibility` 字段声明「可选 MCP：xxx」，并注明 fallback 规则；
+3. skill 内写「有 xxx MCP 则调用其验证，无则用内建工具」——绝不因 MCP 缺失而中断收尾流程。
+
+## 版本兼容性
+
+| 检查项 | 值 |
+|---|---|
+| SKILL.md 版本 | 1.1.0 |
+| Agent Skills 标准 | 兼容（[agentskills.io](https://agentskills.io) 开放标准，frontmatter: name/description/license/metadata） |
+| frontmatter 校验 | 通过 `skills-ref validate`（CI 自动检查，见 [.github/workflows/validate.yml](.github/workflows/validate.yml)） |
+| 运行依赖 | 无 Python/Node 脚本；需文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整） |
+| MCP 依赖 | 无（可选接入） |
+| 联动 skill | [deep-review-loop](https://github.com/1273984347/deep-review-loop)（审查）/ [self-evolution](https://github.com/1273984347/self-evolution)（沉淀）——不装也能独立运行 |
+
+**客户端兼容矩阵**：
+
+| 客户端 | 安装方式 | 支持 |
+|---|---|---|
+| TRAE | 复制目录到 skills 目录，自动注册 | ✅ |
+| Claude Code | `/plugin marketplace add` 或复制目录 | ✅ |
+| Codex / Cursor / OpenCode 等 | 复制目录（Agent Skills 标准客户端） | ✅ |
+| 其他 | 需支持 SKILL.md frontmatter + 渐进披露 | 视实现 |
 
 ## 环境适配
 
