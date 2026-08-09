@@ -1,0 +1,57 @@
+{
+  "skill_name": "mem-wrap-up",
+  "evals": [
+    {
+      "id": 1,
+      "name": "stale-docs",
+      "prompt": "我刚把项目升到了 v2.1.0，文档也同步过了，帮我跑收尾。",
+      "expected_output": "执行 4a 项目层文档同步 spot-check：Grep 验证版本号与任务 ID 实际落地，不信任「已同步」声明，发现 stale 文档立即修复或标 pending。",
+      "files": ["evals/fixtures/eval-1-stale-docs"],
+      "expectations": [
+        "Grep spot-check 抓到 README 头部仍声明 v2.0.0 的假收敛",
+        "区分历史段（CHANGELOG 旧版本保留）与现役段（README 头部必须更新）",
+        "用 git ls-files 验证声明同步的文件实际被 tracked",
+        "无版本推进时 4a 标 not-applicable，不编造验证证据"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "memory-sync",
+      "prompt": "这个 session 该收尾了，memory 之前说更新过，帮我再核一遍。",
+      "expected_output": "执行 7a memory 层 spot-check：Grep 验证任务 ID 在 work-log / topics / retrospective 三件套实际出现，发现缺段立即补齐。",
+      "files": ["evals/fixtures/eval-2-memory-sync"],
+      "expectations": [
+        "发现 work-log.md 缺 4 段 schema（verification cost 段缺失）",
+        "发现 topics.md 缺 session_id 字段",
+        "三件套中任一文件任务 ID 命中 <1 → 判定 P1 memory 层假收敛并补齐",
+        "retrospective 复盘维度段缺失 → 判定 P2 并补齐"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "sedimentation",
+      "prompt": "这个 session 学到一个新方法，帮我沉淀进记忆，然后收尾。",
+      "expected_output": "执行 Step 5 sediment：提炼复利经验（5Why ≥3 层）→ 判断归属（user 级/项目级/topic）→ Read-before-Edit → Edit → Grep-verify，按毕业判据分流。",
+      "files": ["evals/fixtures/eval-3-sedimentation"],
+      "expectations": [
+        "经验写入前先 Read 目标文件当前内容（不信任 cache）",
+        "Edit 后 Grep 验证新值落地 + 旧值消失，失败则 Retry（≤3 次）",
+        "按毕业判据判断：稳定机制/反复 ≥3 次/接手者必知 → 毕业到 docs",
+        "一次性事故/个人偏好 → 留在 memory 不动"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "closeout-report",
+      "prompt": "收尾跑完了，按模板给我出汇报。",
+      "expected_output": "按分阶段汇报模板输出：影响 / 改动 / 待确认 / 遗留四段，明确列出 pending 与 out-of-scope，不用 verdict 字眼掩盖。",
+      "files": ["evals/fixtures/eval-4-closeout-report"],
+      "expectations": [
+        "汇报含 影响 / 改动 / 待确认 / 遗留 四段结构",
+        "明确列出 pending、out-of-scope 和未消除的 warning",
+        "不包含 verdict 字眼（完成/PASS/12/12/闭环/OK/没问题）",
+        "删除候选未确认前不执行删除，只列清单"
+      ]
+    }
+  ]
+}

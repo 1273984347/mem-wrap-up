@@ -1,0 +1,53 @@
+{
+  "skill_name": "mem-wrap-up",
+  "queries": [
+    {
+      "query": "这个 session 该收尾了，帮我整理一下文档和记忆",
+      "should_trigger": true
+    },
+    {
+      "query": "帮我 wrap up 一下，沉淀这个 session 的经验",
+      "should_trigger": true
+    },
+    {
+      "query": "工作流已经沉淀了，帮我继续",
+      "should_trigger": true
+    },
+    {
+      "query": "文档和代码对不上了，帮我收尾核对",
+      "should_trigger": true
+    },
+    {
+      "query": "跑一下收尾，用 mem-wrap-up",
+      "should_trigger": true
+    },
+    {
+      "query": "我刚批量修了 15 个文件，跑 deep review 复检",
+      "should_trigger": false
+    },
+    {
+      "query": "帮我复盘这个月的经验，做 11 维度分析",
+      "should_trigger": false
+    },
+    {
+      "query": "这个函数报错了，帮我看看",
+      "should_trigger": false
+    },
+    {
+      "query": "帮我写个 hello world",
+      "should_trigger": false
+    },
+    {
+      "query": "解释一下什么是 HTTP 缓存",
+      "should_trigger": false
+    },
+    {
+      "query": "把这段 JSON 转成 YAML",
+      "should_trigger": false
+    },
+    {
+      "query": "写完方案了，帮我复检收敛一遍",
+      "should_trigger": false
+    }
+  ]
+}

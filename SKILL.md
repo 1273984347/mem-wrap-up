@@ -1,13 +1,15 @@
 ---
 name: mem-wrap-up
-description: >
+description: >-
   Enforces a 7-step session wrap-up pipeline: memory health check, 5-phase memory audit, fileCount sync,
   doc sync spot-check, heuristic sedimentation, 4-step verify, and memory-layer sync + deep-review-loop.
-  Invoke at session end, when the user says "wrap up / 收尾 / 继续", when a workflow has been sedimented,
-  or when docs and code mismatch.
+  Trigger at session end, when the user says "wrap up / 收尾 / 继续", when a workflow has been
+  sedimented, or when docs and code mismatch — even without the exact words. Do not trigger for deep
+  review of written artifacts (use deep-review-loop) or retro/sedimentation analysis (use self-evolution).
   7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check →
   复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/继续」、
-  工作流已沉淀、或文档与代码不一致时使用。
+  工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
+  不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）。
 license: Apache-2.0
 compatibility: Agent-agnostic. Requires file search (Grep/Read) and shell (Test-Path/Measure) tools.
 metadata:
