@@ -1,4 +1,4 @@
-﻿---
+---
 name: mem-wrap-up
 description: >
   Enforces a 7-step session wrap-up pipeline: memory health check, 5-phase memory audit, fileCount sync,
