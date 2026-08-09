@@ -1,3 +1,9 @@
+<div align="center">
+
+**中文** · [English](./README.en.md)
+
+</div>
+
 # mem-wrap-up
 
 > 7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check → 复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。
