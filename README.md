@@ -19,9 +19,27 @@ session 结束时不收尾 = 结论没验证、经验没沉淀、交接成本转
 
 ## 安装
 
+标准 Agent Skill（`SKILL.md` + `references/`），任何支持 Agent Skills 的客户端都能装。三种方式任选：
+
+**方式 A：直接复制（通用）**
+
 ```bash
 git clone https://github.com/1273984347/mem-wrap-up.git
 cp -r mem-wrap-up <your-skills-dir>/mem-wrap-up
+```
+
+**方式 B：Claude Code 插件市场（一条命令）**
+
+```text
+/plugin marketplace add 1273984347/mem-wrap-up
+/plugin install mem-wrap-up@mem-wrap-up
+```
+
+**方式 C：skills.sh CLI（Agent 界的 npm）**
+
+```bash
+npm install -g @anthropic-ai/skills
+npx skills add https://github.com/1273984347/mem-wrap-up
 ```
 
 ## 使用

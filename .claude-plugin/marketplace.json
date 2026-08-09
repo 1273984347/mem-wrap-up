@@ -1,0 +1,19 @@
+{
+  "name": "mem-wrap-up",
+  "owner": {
+    "name": "1273984347"
+  },
+  "metadata": {
+    "description": "7-step session wrap-up pipeline with memory audit and sedimentation",
+    "version": "1.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mem-wrap-up",
+      "description": "7-step session wrap-up pipeline: memory audit, doc-sync spot-check, experience sedimentation",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ]
+}
