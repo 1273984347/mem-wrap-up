@@ -9,6 +9,9 @@
 > A 7-step session wrap-up pipeline: memory health check → 5-phase audit → fileCount sync → doc-sync spot-check → compounding-experience sedimentation → 4-step verify → memory-layer sync + deep re-review.
 
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![CI](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml/badge.svg)](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml)
+[![skills-ref](https://img.shields.io/badge/skills--ref-passing-2ea44f)](https://agentskills.io)
+[![version](https://img.shields.io/badge/version-v1.1.0-1d76db)](https://github.com/1273984347/mem-wrap-up/releases/latest)
 
 ## What problem it solves
 

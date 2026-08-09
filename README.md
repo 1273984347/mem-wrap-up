@@ -9,6 +9,9 @@
 > 7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check → 复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。
 
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![CI](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml/badge.svg)](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml)
+[![skills-ref](https://img.shields.io/badge/skills--ref-passing-2ea44f)](https://agentskills.io)
+[![version](https://img.shields.io/badge/version-v1.1.0-1d76db)](https://github.com/1273984347/mem-wrap-up/releases/latest)
 
 ## 解决什么问题
 
