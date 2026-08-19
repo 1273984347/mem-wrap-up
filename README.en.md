@@ -102,7 +102,7 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 | SKILL.md version | 1.1.0 |
 | Agent Skills standard | Compatible ([agentskills.io](https://agentskills.io); frontmatter: name/description/license/metadata) |
 | Frontmatter validation | `skills-ref validate` (CI, see [.github/workflows/validate.yml](.github/workflows/validate.yml)) |
-| Runtime deps | No Python/Node scripts; needs file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform) |
+| Runtime deps | Needs file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform); `scripts/runtime-audit.py` (optional — read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib) |
 | MCP deps | None (optional) |
 | Linked skills | [deep-review-loop](https://github.com/1273984347/deep-review-loop) (review) / [self-evolution](https://github.com/1273984347/self-evolution) (evolution) — works standalone |
 
