@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Fixed
+- Step 7b 补「未安装 deep-review-loop 时」的降级声明（精简审查 + 显式标注 `DRL downgraded`，不允许静默省略）
 - Step 6 输出改为 P2 ≤ N_max（对齐 deep-review-loop 层 1 P2 残留规则，移除三零目标冲突）
 - Step 4b work-log 路径矛盾修正（统一为 memory 路径约定）
 - Step 7b R0 描述对齐 4 件套（expected hits 必现 + 项目阶段判定）

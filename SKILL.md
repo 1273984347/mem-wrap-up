@@ -236,7 +236,7 @@ metadata:
 - **降级条件**：memory 文件审查范围窄可降级为主代理直接 spot-check（不派 subagent），但 spot-check 必执行不可省略
 
 #### 7b: DRL 5 轮闭环
-- **工具**：Skill 工具调用 deep-review-loop，或按 [deep-review-loop](https://github.com/1273984347/deep-review-loop) 的 SKILL.md 手动执行
+- **工具**：Skill 工具调用 deep-review-loop（已安装时），或按 [deep-review-loop](https://github.com/1273984347/deep-review-loop) 的 SKILL.md 手动执行（未安装但可获取文档时）
 - **5 轮**：
   - **R0**：surface check（file size + verdict 字眼 grep + expected hits 必现 + 项目阶段判定 → N_max）
   - **R1a**：3 独立 verifier 交叉验证（3 subagents parallel，factual / completeness / reusability 3-lens）
@@ -244,7 +244,8 @@ metadata:
   - **R2**：独立审计 + self-revision（1 subagent，NOT inline + **边际收益 gate**，过拟合防护层 2）
   - **R3**：残余风险确认 + N residual risk（≥3）+ 收敛曲线 + **过拟合警报**（层 3，震荡/回归率触发 STOP）
 - **输出**：5 轮闭环报告 + 收敛曲线 + ≥3 residual risk
-- **4 层过拟合防护继承声明**：本 skill Step 7 调用 DRL 时，自动继承 DRL 的 4 层防护（层 1 P2 残留 N / 层 2 边际收益 gate / 层 3 过拟合警报含增强·区分持平/反弹+严重度分层+窗口 4 轮+被动验证 / 层 4 严重度门槛）。细节以 deep-review-loop 的 SKILL.md 当前版本为准，本 skill 不重复定义
+- **未安装 deep-review-loop 时**（Skill 工具调用失败 = skill 未安装）：Step 7b 降级为精简审查（R0 表面检查 + 1 独立 subagent 审查 + R3 ≥3 residual risk + 收敛曲线），收尾报告显式标注 `DRL downgraded (deep-review-loop not installed)`；如需完整 5 轮，提示用户安装 deep-review-loop 后重跑。**降级不是跳过**——精简审查必须执行，不允许静默省略（对齐「裁剪必须显式标注」原则）
+- **4 层过拟合防护继承声明**：本 skill Step 7 调用 DRL 时，自动继承 DRL 的 4 层防护（层 1 P2 残留 N / 层 2 边际收益 gate / 层 3 过拟合警报含增强·区分持平/反弹+严重度分层+窗口 4 轮+被动验证 / 层 4 严重度门槛）。细节以 deep-review-loop 的 SKILL.md 当前版本为准（已安装时直接调用；未安装时按上方降级声明执行），本 skill 不重复定义
 - **R1a 硬性要求继承**：本 skill Step 7 调用 DRL 时，R1a subagent prompt 必须包含 DRL 的硬性要求声明（verifier 必须附工具调用证据 / 目录存在性声明必须附 LS / 文件存在性声明必须附 Read/LS / 路径声明必须附 Read / 0 finding 也要附证据 / Subagent prompt 必含此硬性要求 / 违反处置）。subagent 无文档访问权限，不可仅引用 DRL SKILL.md，必须 inline 完整声明
 - **R1b 硬性要求继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 R1b 硬性要求声明（R1b finding 必须附工具调用证据 / R1b 0 finding 也必须附证据 / R1b class-level enumeration 必须列出 ALL affected files 清单 / R1b 严重度降级必须附依据 / 违反处置）。与 R1a 硬性要求对齐，subagent 无文档访问权限，必须 inline 完整声明
 - **R1b 反模式清单继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 7 项反模式清单（silent skip / 正例 bias / 0 finding 滥用 / 严重度降级 / class-level 偷懒 / residual 敷衍 / 工具证据缺失），subagent 必须自检是否触发任一反模式
