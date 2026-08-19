@@ -61,7 +61,7 @@ cp -r mem-wrap-up <your-skills-dir>/mem-wrap-up
 **Option C: skills.sh CLI (the npm of agents)**
 
 ```bash
-npm install -g @anthropic-ai/skills
+# npx downloads the CLI on first run; no global install needed
 npx skills add https://github.com/1273984347/mem-wrap-up
 ```
 
