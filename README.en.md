@@ -119,7 +119,7 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 
 - Needs file search (Grep/Read) + shell (Test-Path/Measure examples; adjust per platform).
 - All memory paths use `<memory_root>` / `<project-slug>` placeholders — replace per your environment.
-- Step 7 links to [deep-review-loop](https://github.com/1273984347/deep-review-loop): if the standalone skill is installed, call it; otherwise execute the 5 rounds manually per protocol.
+- Step 7 links to [deep-review-loop](https://github.com/1273984347/deep-review-loop): if the standalone skill is installed, run the full 5 rounds; **otherwise it degrades to a trimmed review** (R0 + 1 independent subagent + R3 ≥3 residual risks, explicitly marked `DRL downgraded` in the wrap-up report); prompt the user to install deep-review-loop and rerun for the full 5 rounds.
 
 ## Related repos
 
