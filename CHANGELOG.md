@@ -2,6 +2,19 @@
 
 本文件记录 mem-wrap-up 的版本演进，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。版本号与 `SKILL.md` 的 `metadata.version` 保持一致。
 
+## [Unreleased]
+
+### Fixed
+- Step 6 输出改为 P2 ≤ N_max（对齐 deep-review-loop 层 1 P2 残留规则，移除三零目标冲突）
+- Step 4b work-log 路径矛盾修正（统一为 memory 路径约定）
+- Step 7b R0 描述对齐 4 件套（expected hits 必现 + 项目阶段判定）
+- bridge_note 术语补定义
+
+### Added
+- session_memory_*.jsonl 加入文件结构约定（步骤 1 / 步骤 5 引用定义）
+- runtime-audit.py 分发路径说明（插件路径调用方式）
+- scripts/fragment-lint.py 共享片段一致性 lint + CI 接入
+
 ## [1.1.0] - 2026-08-10
 
 ### Added
