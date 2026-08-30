@@ -101,8 +101,8 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 |---|---|
 | SKILL.md version | 1.1.1 |
 | Agent Skills standard | Compatible ([agentskills.io](https://agentskills.io); frontmatter: name/description/license/metadata) |
-| Frontmatter validation | `skills-ref validate` (CI, see [.github/workflows/validate.yml](.github/workflows/validate.yml)) |
-| Runtime deps | Needs file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform); `scripts/runtime-audit.py` (optional — read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib) |
+| CI gate | Five steps: `skills-ref validate` + `python evals/validate.py` + `python evals/run_behavior.py` + `python scripts/version-lint.py` + `python scripts/fragment-lint.py` (see [.github/workflows/validate.yml](.github/workflows/validate.yml)) |
+| Runtime deps | Skill runtime: file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform); `scripts/runtime-audit.py` optional (read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib); subagent optional (degradation mode when absent); CI lint scripts are dev-time only |
 | MCP deps | None (optional) |
 | Linked skills | [deep-review-loop](https://github.com/1273984347/deep-review-loop) (review) / [self-evolution](https://github.com/1273984347/self-evolution) (evolution) — works standalone |
 
@@ -117,8 +117,11 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 
 ## Environment
 
-- Needs file search (Grep/Read) + shell (Test-Path/Measure examples; adjust per platform).
-- All memory paths use `<memory_root>` / `<project-slug>` placeholders — replace per your environment.
+- **Path placeholders (read before first use)**: all memory paths use `<memory_root>` / `<project-slug>` placeholders — replace before running:
+  - `<memory_root>` = your agent's memory root. Common setups: TRAE → `.trae-cn/memory`; Claude Code → projects dir; WorkBuddy → `~/.workbuddy/memory/` or in-repo `.workbuddy/memory/`; if no memory system exists, create an in-repo `.agent-memory/`.
+  - `<project-slug>` = the current workspace's project dir name (e.g. `open-source`).
+  - **Not sure?** Run `ls` (POSIX) / `Get-ChildItem` (PowerShell) to inspect your agent environment's existing dirs, then map against the examples above; **never guess paths**. If the environment truly has no memory system, mark the step `not-applicable` — never fabricate evidence.
+- **Tools**: file search (Grep/Read) + shell (Test-Path/Measure examples; adjust per platform); subagent/task spawning is **optional** — without it, the skill falls back to the degradation mode (see SKILL.md「无子代理平台的降级模式」).
 - Step 7 links to [deep-review-loop](https://github.com/1273984347/deep-review-loop): if the standalone skill is installed, run the full 5 rounds; **otherwise it degrades to a trimmed review** (R0 + 1 independent subagent + R3 ≥3 residual risks, explicitly marked `DRL downgraded` in the wrap-up report); prompt the user to install deep-review-loop and rerun for the full 5 rounds.
 
 ## Related repos

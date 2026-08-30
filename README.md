@@ -101,8 +101,8 @@ session 收尾、用户说「收尾 / wrap up」、工作流已沉淀需继续�
 |---|---|
 | SKILL.md 版本 | 1.1.1 |
 | Agent Skills 标准 | 兼容（[agentskills.io](https://agentskills.io) 开放标准，frontmatter: name/description/license/metadata） |
-| frontmatter 校验 | 通过 `skills-ref validate`（CI 自动检查，见 [.github/workflows/validate.yml](.github/workflows/validate.yml)） |
-| 运行依赖 | 需文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整）；`scripts/runtime-audit.py`（可选，6 面矩阵运行态面的只读探测工具，纯 stdlib） |
+| CI 门禁 | 五步：`skills-ref validate` + `python evals/validate.py` + `python evals/run_behavior.py` + `python scripts/version-lint.py` + `python scripts/fragment-lint.py`（见 [.github/workflows/validate.yml](.github/workflows/validate.yml)） |
+| 运行依赖 | skill 运行：文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整）；`scripts/runtime-audit.py` 可选（6 面矩阵运行态面的只读探测工具，纯 stdlib）；subagent 可选（无则降级）；CI lint 脚本仅开发期需要 |
 | MCP 依赖 | 无（可选接入） |
 | 联动 skill | [deep-review-loop](https://github.com/1273984347/deep-review-loop)（审查）/ [self-evolution](https://github.com/1273984347/self-evolution)（沉淀）——不装也能独立运行 |
 
@@ -117,8 +117,11 @@ session 收尾、用户说「收尾 / wrap up」、工作流已沉淀需继续�
 
 ## 环境适配
 
-- 需要文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整）。
-- 所有 memory 路径使用 `<memory_root>` / `<project-slug>` 占位符，按你的环境替换。
+- **路径占位符（首次使用必读）**：所有 memory 路径使用 `<memory_root>` / `<project-slug>` 占位符，执行前先替换：
+  - `<memory_root>` = agent 的 memory 根目录。常见环境：TRAE → `.trae-cn/memory`；Claude Code → projects 目录；WorkBuddy → `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；无现成 memory 系统时，在项目内建 `.agent-memory/` 即可。
+  - `<project-slug>` = 当前 workspace 的项目目录名（如 `open-source`）。
+  - **不确定怎么填？** 先 `ls`（POSIX）/ `Get-ChildItem`（PowerShell）查看你的 agent 环境已有目录，对照上述示例再替换；**不要凭空猜路径**。若环境确无 memory 系统，相关步骤标 `not-applicable`，不编造证据。
+- **工具**：文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整）；subagent/task 派生为**可选能力**——无则自动走降级模式（见 SKILL.md「无子代理平台的降级模式」）。
 - Step 7 联动 [deep-review-loop](https://github.com/1273984347/deep-review-loop)（审查）：装了独立 skill 直接调用完整 5 轮；**未装则自动降级为精简审查**（R0 + 1 独立 subagent + R3 ≥3 residual，收尾报告显式标注 `DRL downgraded`），如需完整 5 轮提示安装后重跑。
 
 ## 相关仓库
