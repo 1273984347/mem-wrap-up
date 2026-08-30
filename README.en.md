@@ -118,10 +118,10 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 ## Environment
 
 - **Path placeholders (read before first use)**: all memory paths use `<memory_root>` / `<project-slug>` placeholders — replace before running:
-  - `<memory_root>` = your agent's memory root. Common setups: TRAE → `.trae-cn/memory`; Claude Code → projects dir; WorkBuddy → `~/.workbuddy/memory/` or in-repo `.workbuddy/memory/`; if no memory system exists, create an in-repo `.agent-memory/`.
+  - `<memory_root>` = your agent's memory root. Common setups: TRAE → `~/.trae-cn/memory`; Claude Code → `%USERPROFILE%\.claude\projects` (Windows) / `~/Library/Application Support/Claude/projects` (macOS); WorkBuddy → `~/.workbuddy/memory/` or in-repo `.workbuddy/memory/`; if no memory system exists, create an in-repo `.agent-memory/`.
   - `<project-slug>` = the current workspace's project dir name (e.g. `open-source`).
-  - **Not sure?** Run `ls` (POSIX) / `Get-ChildItem` (PowerShell) to inspect your agent environment's existing dirs, then map against the examples above; **never guess paths**. If the environment truly has no memory system, mark the step `not-applicable` — never fabricate evidence.
-- **Tools**: file search (Grep/Read) + shell (Test-Path/Measure examples; adjust per platform); subagent/task spawning is **optional** — without it, the skill falls back to the degradation mode (see SKILL.md「无子代理平台的降级模式」).
+  - **Not sure?** Run `ls` (macOS/Linux) / `Get-ChildItem` (Windows) to inspect your agent environment's existing dirs, then map against the examples above; **never guess paths**. If the environment truly has no memory system, mark the step `not-applicable` — never fabricate evidence.
+- **Tools**: file search (Grep/Read) + shell (PowerShell examples; macOS/Linux use bash/zsh equivalents — see SKILL.md「命令示例（Windows PowerShell ↔ macOS/Linux POSIX）」); subagent/task spawning is **optional** — without it, the skill falls back to the degradation mode (see SKILL.md「无子代理平台的降级模式」).
 - Step 7 links to [deep-review-loop](https://github.com/1273984347/deep-review-loop): if the standalone skill is installed, run the full 5 rounds; **otherwise it degrades to a trimmed review** (R0 + 1 independent subagent + R3 ≥3 residual risks, explicitly marked `DRL downgraded` in the wrap-up report); prompt the user to install deep-review-loop and rerun for the full 5 rounds.
 
 ## Related repos

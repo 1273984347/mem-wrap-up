@@ -30,14 +30,14 @@ metadata:
 | 正文写法 | 通用能力 | 常见平台实现 |
 |:---|:---|:---|
 | subagent / Task | 派独立子代理（可并行） | TRAE Task / Codex spawn_agent / Claude Code Task |
-| RunCommand | 执行 shell 命令 | PowerShell / bash / sh |
+| RunCommand | 执行 shell 命令 | PowerShell（Windows）/ bash / zsh（macOS）/ sh |
 | Grep 工具 | 文本搜索 | TRAE Grep / `rg` / `grep` / Select-String |
 | Read / Edit / Write | 文件读写 | 各平台内建文件工具 / apply_patch |
 | LS / Glob | 枚举文件与目录 | `ls` / `Get-ChildItem` / glob |
 | Skill 工具 | 调用另一个 skill | 各平台 skill 机制；无则按对应 SKILL.md 手动执行 |
 | NEEDS_CONTEXT | 子代理缺上下文的回退信号 | 通用约定：子代理报告「信息不足/上下文缺失」时按 fallback 处理；个别平台内建等价信号（如 TRAE NEEDS_CONTEXT）直接映射 |
 
-**PowerShell 示例的 POSIX 等价命令**：
+**命令示例（Windows PowerShell ↔ macOS/Linux POSIX）**：
 
 | 目的 | PowerShell | POSIX |
 |:---|:---|:---|
@@ -79,7 +79,7 @@ metadata:
 
 本 skill 涉及 memory 操作时，使用占位符路径，按你的环境替换：
 
-- `<memory_root>` = agent 的 memory 根目录（如 TRAE `.trae-cn/memory`、Claude Code 的 projects 目录，或项目内 `.agent-memory`）
+- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；无现成 memory 系统时在项目内建 `.agent-memory/`）
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
 - `<date>` = 当日日期目录（`YYYYMMDD`）
 
@@ -103,7 +103,7 @@ metadata:
 ### 步骤 1: memory 健康检查
 - **工具**：RunCommand（PowerShell）+ Grep 工具
 - **动作**：
-  1. 列 `<memory_root>/` 目录树大小：`Get-ChildItem -Recurse | Measure-Object -Line`
+  1. 列 `<memory_root>/` 目录树大小：`Get-ChildItem -Recurse | Measure-Object -Line`（macOS/Linux：`find <memory_root> -type f | wc -l`）
   2. Grep 工具扫 user_profile.md / 各 project_memory.md 的 P0/P1/P2 标记
   3. 统计 session_memory_*.jsonl 文件数 + 总行数
 - **输出**：metrics（P0/P1/P2 数量 + fileCount + line count）
@@ -114,8 +114,8 @@ metadata:
   1. **frontmatter audit**：Grep `^---$` 验证每个 .md 文件有 frontmatter
   2. **dup audit**：Grep 工具跨文件查重复条目（e.g. 同一规则在 user_profile 和 project_memory 双写）
   3. **empty audit**：Read 工具检查空文件 / 只有 frontmatter 的 stub
-  4. **big-file audit**：RunCommand `Get-ChildItem -Recurse | Where-Object {$_.Length -gt 50KB}` 找超大文件
-  5. **broken-link audit**：Grep 工具 pattern `file:///|\.md\)` 找链接，逐个 Test-Path 验证目标存在
+  4. **big-file audit**：RunCommand `Get-ChildItem -Recurse | Where-Object {$_.Length -gt 50KB}` 找超大文件（macOS/Linux：`find . -type f -size +50k`）
+  5. **broken-link audit**：Grep 工具 pattern `file:///|\.md\)` 找链接，逐个 Test-Path 验证目标存在（macOS/Linux：`test -e`）
 - **输出**：5 phase 报告 + 6 面状态矩阵（见下）
 
 #### 6 面状态矩阵（知识治理扩展）
@@ -142,7 +142,7 @@ metadata:
 ### 步骤 3: project_memory.md fileCount sync
 - **工具**：RunCommand + Grep 工具 + Read 工具
 - **动作**：
-  1. RunCommand 统计实际 memory 文件数：`Get-ChildItem "<memory_root>/projects" -Recurse -File | Measure-Object`
+  1. RunCommand 统计实际 memory 文件数：`Get-ChildItem "<memory_root>/projects" -Recurse -File | Measure-Object`（macOS/Linux：`find <memory_root>/projects -type f | wc -l`）
   2. Read 工具读 project_memory.md 头部 frontmatter（如有 fileCount 声明）
   3. 对比实际 vs 声明，drift > 5% 触发警告
 - **输出**：实际 total vs 声明 fileCount 漂移报告
@@ -215,10 +215,10 @@ metadata:
 ### 步骤 6: 4-step verify
 - **工具**：Grep 工具 + Read 工具 + RunCommand
 - **4 步**（治本 bash hang / 文件缺失）：
-  1. **file exists**：RunCommand `Test-Path <FILE>` 验每个声称写入的文件
+  1. **file exists**：RunCommand `Test-Path <FILE>` 验每个声称写入的文件（macOS/Linux：`test -f`）
   2. **content count**：Grep 工具 output_mode=count 验关键内容命中
-  3. **link target**：RunCommand `Get-Item <LINK> | Select-Object Target` 验软链
-  4. **wc -l**：RunCommand `(Get-Content <FILE>).Count` 验行数
+  3. **link target**：RunCommand `Get-Item <LINK> | Select-Object Target` 验软链（macOS/Linux：`readlink -f <LINK>`）
+  4. **wc -l**：RunCommand `(Get-Content <FILE>).Count` 验行数（macOS/Linux：`wc -l <FILE>`）
 - **输出**：P0=0 P1=0、P2 ≤ N_max（N_max 按项目阶段：比赛级 0 / 生产 3 / 原型 10，对齐 deep-review-loop 层 1 P2 残留规则；不写 OK / 完成，列数据 + 实证）
 
 ### 步骤 7: memory 层同步 Grep spot-check + deep-review-loop（联动审查 skill）
