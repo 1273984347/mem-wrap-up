@@ -16,6 +16,13 @@
 - runtime-audit.py 分发路径说明（插件路径调用方式）
 - scripts/fragment-lint.py 共享片段一致性 lint + CI 接入
 
+## [1.1.1] - 2026-08-31
+
+### Changed
+- 跨平台清理：NEEDS_CONTEXT 信号通用化（去掉 TRAE 平台绑定），compatibility 字段改为 subagent optional
+- 新增「无子代理平台的降级模式」：并行 subagent → 串行/主代理分轮内审，独立审查 → 自我对抗（显式标注 `degraded (no-subagent)`），降级 ≠ 跳过
+- 四源版本同步（SKILL.md / README / CHANGELOG / marketplace.json）
+
 ## [1.1.0] - 2026-08-10
 
 ### Added

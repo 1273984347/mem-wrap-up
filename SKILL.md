@@ -11,9 +11,9 @@ description: >-
   工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
   不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）。
 license: Apache-2.0
-compatibility: Agent-agnostic. Requires file search (Grep/Read) and shell (Test-Path/Measure) tools.
+compatibility: Agent-agnostic. Requires file search (Grep/Read) and shell (Test-Path/Measure) tools; subagent/task spawning optional (degradation mode when absent).
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # mem-wrap-up
@@ -35,7 +35,7 @@ metadata:
 | Read / Edit / Write | 文件读写 | 各平台内建文件工具 / apply_patch |
 | LS / Glob | 枚举文件与目录 | `ls` / `Get-ChildItem` / glob |
 | Skill 工具 | 调用另一个 skill | 各平台 skill 机制；无则按对应 SKILL.md 手动执行 |
-| NEEDS_CONTEXT | 子代理缺上下文的回退信号 | TRAE 内建；其他平台等价于子代理报「信息不足」，按 fallback 处理 |
+| NEEDS_CONTEXT | 子代理缺上下文的回退信号 | 通用约定：子代理报告「信息不足/上下文缺失」时按 fallback 处理；个别平台内建等价信号（如 TRAE NEEDS_CONTEXT）直接映射 |
 
 **PowerShell 示例的 POSIX 等价命令**：
 
@@ -47,6 +47,18 @@ metadata:
 | 超大文件 | `Get-ChildItem -Recurse \| Where-Object {$_.Length -gt 50KB}` | `find . -type f -size +50k` |
 | 软链目标 | `Get-Item LINK \| Select-Object Target` | `readlink -f LINK` / `ls -l LINK` |
 | 命中计数 | Grep output_mode=count | `grep -c PATTERN FILE` / `rg -c PATTERN FILE` |
+
+## 无子代理平台的降级模式
+
+平台不支持子代理/任务派生时，**降级 ≠ 跳过**，7 步流水线必须全部执行，只改变执行者：
+
+| 原执行方式 | 降级方式 | 铁律 |
+|:---|:---|:---|
+| Step 2/4 审计派 subagent | 主代理按 5 phase / 4 段 schema 逐项自查 | 审计维度缺一不可，逐项打勾留证 |
+| Step 7 联动 DRL（R1a 3 parallel） | 串行逐个视角检查；或按 deep-review-loop 降级模式内审 | 降级显式标注 `degraded (no-subagent)`，不静默跳过 Step 7 |
+| 子代理缺上下文回退（NEEDS_CONTEXT） | 主代理自查 scope 是否过宽，缩小到具体 file:line 后重跑 | 不允许静默跳过该步 |
+
+降级后收尾报告必须显式标注 `degraded (no-subagent mode)`，不编造子代理证据。
 
 ## 在 skill 闭环中的位置
 
@@ -264,7 +276,7 @@ metadata:
 
 ## Failure handling
 - 任一步骤失败 → 不继续下一步，stderr 报告
-- subagent idle fallback：撞 NEEDS_CONTEXT ≥3 走 fallback prompt（缩小 scope + 给具体 file:line）
+- subagent idle fallback：子代理报告「信息不足/上下文缺失」（NEEDS_CONTEXT 或等价信号）≥3 走 fallback prompt（缩小 scope + 给具体 file:line）
 - Token 超额（步骤 7 R1a 派 3 subagent）→ abort 走 3 选 1：
   1. 降级为 1 subagent（牺牲 coverage）
   2. 分批派（先 factual，再 completeness + reusability）
