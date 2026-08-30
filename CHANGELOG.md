@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-31
+
+### Fixed
+- 路径预检 + Grep 空结果判别：占位符使用前强制 `test -e`，预检失败中断问用户（漏洞 7/9/15）
+- 安全扫描局限标注：0 发现必须附「正则仅覆盖硬编码格式」注记（漏洞 16）
+- Step 7 反向审查继承 DRL 出口 ACK 门禁（漏洞 6）
+
+### Added
+- LLM 行为 eval（evals/run_behavior_llm.py，发布前手动门禁）
+- fragment-lint 交叉引用校验；version-lint 内容漂移软告警
+- README badge 改动态 release badge；CI 加 macos-latest runner + skills-ref pin
+
 ## [1.1.1] - 2026-08-31
 
 ### Fixed

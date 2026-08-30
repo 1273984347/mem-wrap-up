@@ -11,7 +11,7 @@
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![CI](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml/badge.svg)](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml)
 [![skills-ref](https://img.shields.io/badge/skills--ref-passing-2ea44f)](https://agentskills.io)
-[![version](https://img.shields.io/badge/version-v1.1.1-1d76db)](https://github.com/1273984347/mem-wrap-up/releases/latest)
+[![version](https://img.shields.io/github/v/release/1273984347/mem-wrap-up)](https://github.com/1273984347/mem-wrap-up/releases/latest)
 
 ## 解决什么问题
 
@@ -99,7 +99,7 @@ session 收尾、用户说「收尾 / wrap up」、工作流已沉淀需继续�
 
 | 检查项 | 值 |
 |---|---|
-| SKILL.md 版本 | 1.1.1 |
+| SKILL.md 版本 | 1.1.2 |
 | Agent Skills 标准 | 兼容（[agentskills.io](https://agentskills.io) 开放标准，frontmatter: name/description/license/metadata） |
 | CI 门禁 | 五步：`skills-ref validate` + `python evals/validate.py` + `python evals/run_behavior.py` + `python scripts/version-lint.py` + `python scripts/fragment-lint.py`（见 [.github/workflows/validate.yml](.github/workflows/validate.yml)） |
 | 运行依赖 | skill 运行：文件搜索（Grep/Read）+ shell（Test-Path/Measure 示例，跨平台需相应调整）；`scripts/runtime-audit.py` 可选（6 面矩阵运行态面的只读探测工具，纯 stdlib）；subagent 可选（无则降级）；CI lint 脚本仅开发期需要 |

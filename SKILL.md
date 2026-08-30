@@ -13,7 +13,7 @@ description: >-
 license: Apache-2.0
 compatibility: Agent-agnostic. Requires file search (Grep/Read) and shell (Test-Path/Measure) tools; subagent/task spawning optional (degradation mode when absent).
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
 ---
 
 # mem-wrap-up
@@ -80,6 +80,8 @@ metadata:
 本 skill 涉及 memory 操作时，使用占位符路径，按你的环境替换：
 
 - `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；无现成 memory 系统时在项目内建 `.agent-memory/`）
+
+**路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
 - `<date>` = 当日日期目录（`YYYYMMDD`）
 
@@ -184,7 +186,7 @@ metadata:
   1. **verification cost**：本 session 实证了多少 verification command（Grep/Read/RunCommand 调用计数）
   2. **throughput decoupling**：per-dim decision 跟 user final decision 分离记录（我建议 vs user 选）
   3. **ANED 3 指标**：actual vs nominal vs estimated delta（任务实际耗时 vs 名义 vs 估算差值）
-  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）
+  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）；**0 发现必须附注局限**：「正则仅覆盖硬编码格式，不覆盖配置类风险（权限/未加密连接串/暴露内部 API），不作为安全审计结论」——不得以 0 发现表述为「安全通过」
 - **必含字段**：date / session_id / milestones / retro_link
 - **Caveat**：如工作流已 sediment，不强制 Bash → Write discipline
 

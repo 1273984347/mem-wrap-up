@@ -11,7 +11,7 @@
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![CI](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml/badge.svg)](https://github.com/1273984347/mem-wrap-up/actions/workflows/validate.yml)
 [![skills-ref](https://img.shields.io/badge/skills--ref-passing-2ea44f)](https://agentskills.io)
-[![version](https://img.shields.io/badge/version-v1.1.1-1d76db)](https://github.com/1273984347/mem-wrap-up/releases/latest)
+[![version](https://img.shields.io/github/v/release/1273984347/mem-wrap-up)](https://github.com/1273984347/mem-wrap-up/releases/latest)
 
 ## What problem it solves
 
@@ -99,7 +99,7 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 
 | Check | Value |
 |---|---|
-| SKILL.md version | 1.1.1 |
+| SKILL.md version | 1.1.2 |
 | Agent Skills standard | Compatible ([agentskills.io](https://agentskills.io); frontmatter: name/description/license/metadata) |
 | CI gate | Five steps: `skills-ref validate` + `python evals/validate.py` + `python evals/run_behavior.py` + `python scripts/version-lint.py` + `python scripts/fragment-lint.py` (see [.github/workflows/validate.yml](.github/workflows/validate.yml)) |
 | Runtime deps | Skill runtime: file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform); `scripts/runtime-audit.py` optional (read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib); subagent optional (degradation mode when absent); CI lint scripts are dev-time only |
