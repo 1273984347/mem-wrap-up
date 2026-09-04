@@ -99,12 +99,14 @@ This skill and MCP are **complementary, not dependent**: MCP provides external s
 
 | Check | Value |
 |---|---|
-| SKILL.md version | 1.1.2 |
+| SKILL.md version | 1.1.3 |
 | Agent Skills standard | Compatible ([agentskills.io](https://agentskills.io); frontmatter: name/description/license/metadata) |
 | CI gate | Five steps: `skills-ref validate` + `python evals/validate.py` + `python evals/run_behavior.py` + `python scripts/version-lint.py` + `python scripts/fragment-lint.py` (see [.github/workflows/validate.yml](.github/workflows/validate.yml)) |
-| Runtime deps | Skill runtime: file search (Grep/Read) + shell (Test-Path/Measure examples, adjust per platform); `scripts/runtime-audit.py` optional (read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib); subagent optional (degradation mode when absent); CI lint scripts are dev-time only |
+| Runtime deps | Skill runtime: filesystem + shell (PowerShell/POSIX: Test-Path/wc examples) + file search (Grep/Read); `scripts/runtime-audit.py` optional (read-only probe for the "runtime" surface of the 6-surface matrix, pure stdlib); subagent optional (degradation mode when absent); shell-less web agents not supported; CI lint scripts are dev-time only |
 | MCP deps | None (optional) |
 | Linked skills | [deep-review-loop](https://github.com/1273984347/deep-review-loop) (review) / [self-evolution](https://github.com/1273984347/self-evolution) (evolution) — works standalone |
+
+**Cost expectations**: Step 7b spawns up to 5 subagents per DRL round when deep-review-loop is linked; when it is not installed — or in token-sensitive runs — Step 7b automatically degrades to the trimmed review (explicitly marked `DRL downgraded`), never a silent full run. Steps 1–6 are lightweight checks executed directly by the main agent.
 
 **Client compatibility**:
 

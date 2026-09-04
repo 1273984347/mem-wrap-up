@@ -11,9 +11,9 @@ description: >-
   工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
   不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）。
 license: Apache-2.0
-compatibility: Agent-agnostic. Requires file search (Grep/Read) and shell (Test-Path/Measure) tools; subagent/task spawning optional (degradation mode when absent).
+compatibility: Requires filesystem + shell (PowerShell/POSIX - Test-Path/wc) + file search (Grep/Read); memory directory convention; subagent optional (degradation mode when absent). Shell-less web agents not supported.
 metadata:
-  version: "1.1.2"
+  version: "1.1.3"
 ---
 
 # mem-wrap-up
@@ -85,17 +85,25 @@ metadata:
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
 - `<date>` = 当日日期目录（`YYYYMMDD`）
 
-**文件结构约定**（可按你的 memory 系统调整）：
+**文件结构约定**（与 agent-session-loop / self-evolution 三仓库统一的一套 memory 布局；仅 project_memory / session_memory_*.jsonl / work-log / topics 为本 skill 写入，其余为 self-evolution 写入目标，本 skill 步骤 2 / 7a 审计时读取）：
 
 ```
 <memory_root>/
 ├── user_profile.md                          # 用户级偏好与铁律（跨项目）
+├── knowledge/
+│   ├── patterns/                            # 经验升级：pattern 层（self-evolution 写入）
+│   ├── heuristics/                          # 经验升级：heuristic 层（self-evolution 写入）
+│   └── policies/                            # 经验升级：policy 层，需人工确认（self-evolution 写入）
 └── projects/<project-slug>/
     ├── project_memory.md                    # 项目级规则
+    ├── experience-log.md                    # 经验记录权威源（self-evolution 写入）
+    ├── experience-quickref.md               # 速查表（self-evolution 写入）
+    ├── skill-usage-checklist.md             # Skill 使用检查清单（self-evolution 写入）
     ├── session_memory_*.jsonl               # 会话级运行时记录（步骤 1 统计 / 步骤 5 Retry-on-fail 兜底写入）
     └── <date>/
         ├── work-log.md                      # 4 段 schema 追加
-        └── topics.md                        # 近期 topic
+        ├── topics.md                        # 近期 topic
+        └── retrospective.md                 # 全面复盘报告（self-evolution 写入，步骤 7a spot-check）
 ```
 
 ## 7 步（顺序固定，bridge_note 桥接 4 段 schema）
@@ -133,7 +141,7 @@ metadata:
 | 记忆 | 快照是否仍准确且允许修改？ | user_profile/project_memory/topics、索引 | <状态> |
 | 工作区 | 是否仍有未集成或未审计的残留？ | 会话残留文件、worktree、分支、临时库 | <状态> |
 
-**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随插件分发，位于 `<plugins>/mem-wrap-up/scripts/runtime-audit.py`（`<plugins>` = 本 skill 安装目录）；目标项目内未放置脚本时，用插件路径调用：`python <plugins>/mem-wrap-up/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。
+**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随插件分发，位于 `<plugins>/mem-wrap-up/scripts/runtime-audit.py`（`<plugins>` = 本 skill 安装目录）；目标项目内未放置脚本时，用插件路径调用：`python <plugins>/mem-wrap-up/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。**端口探测是启发式**：连接成功 ≠ 本项目服务存活（可能是同端口的其他本地服务），证据按启发式标注，不作为运行态 `verified` 的唯一依据。
 
 **判定原则**：
 - 小项目不必硬凑六面：没有部署 → 运行态标 `not-applicable`；无记忆系统 → 记忆面标 `not-applicable`，不编造证据
@@ -251,6 +259,7 @@ metadata:
 
 #### 7b: DRL 5 轮闭环
 - **工具**：Skill 工具调用 deep-review-loop（已安装时），或按 [deep-review-loop](https://github.com/1273984347/deep-review-loop) 的 SKILL.md 手动执行（未安装但可获取文档时）
+- **防 ping-pong 护栏**：本 step 每次收尾至多执行一轮 DRL；DRL 收敛后触发的「mem-wrap-up 反向验证」由调用方主流程承接，不再重入本 skill
 - **5 轮**：
   - **R0**：surface check（file size + verdict 字眼 grep + expected hits 必现 + 项目阶段判定 → N_max）
   - **R1a**：3 独立 verifier 交叉验证（3 subagents parallel，factual / completeness / reusability 3-lens）
@@ -272,6 +281,7 @@ metadata:
 
 ## Verdict 字眼合规自检
 - 全文 Grep 禁词：完成|PASS|12/12|闭环|OK|没问题|looks good
+- grep 命中先剔除禁词定义行本身：meta-skill 场景下目标文件内嵌的禁词清单字符串会自匹配，必须剔除含 pattern 的定义行后重新计数；「OK」子串误报（TOKEN / BROKEN 等全大写词）同理
 - 必含对抗性 verify（步骤 7 R1b，default refuted=true）
 - 必含 5Why ≥3 层（写入 sediment 段时触发）
 - 历史 log 文件例外（步骤 4 work-log 引用过往 verdict 不算违规）

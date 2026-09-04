@@ -15,6 +15,11 @@ Design rules:
   - Each probe reports one of: verified / stale / not-found / not-applicable,
     matching the 6-surface matrix status vocabulary.
 
+Caveat: the port probe is a heuristic. A listening socket on a config-derived
+port proves that *something* answers locally, not that *this project's* service
+is the process behind it (another local service may occupy the port). Treat
+port/health results as heuristic evidence, never as sole proof of "verified".
+
 Usage:
   python scripts/runtime-audit.py [--project-dir PATH] [--port PORT] [--json]
 """
@@ -40,6 +45,11 @@ MARKER_FILES = (
 )
 BUILD_DIRS = ("dist", "build", "out")
 SOURCE_DIRS = ("src", "app", "lib")
+
+CAVEAT = (
+    "port probe is heuristic: a listening socket on a config-derived port "
+    "does not prove this project's service is the one answering"
+)
 
 
 def find_config_ports(project: Path) -> list[int]:
@@ -160,7 +170,7 @@ def main() -> int:
         print(f"error: not a directory: {project}", file=sys.stderr)
         return 1
 
-    report: dict[str, object] = {"project": str(project)}
+    report: dict[str, object] = {"project": str(project), "caveat": CAVEAT}
 
     # 1) Listening ports
     ports = [args.port] if args.port else find_config_ports(project)
@@ -203,6 +213,7 @@ def main() -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(f"runtime audit: {report['project']}")
+        print(f"  caveat            : {CAVEAT}")
         print(f"  config ports      : {ports}  -> listening: {listening}  [{report['port_status']}]")
         for h in health:
             print(f"  health            : :{h['port']}{h['path']} -> {h['status']}")

@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-09-04
+
+### Fixed
+- publish-tessl.yml：TESSL_TOKEN 提升到 job 级 env——step 自身的 env 在它自己的 `if` 求值时尚未应用，原 step 级写法条件恒为 false，配置了 secret 也永远跳过（发布流水线死代码修复）
+- GitHub Actions 全部 pin 到 commit SHA（actions/checkout v4/v6、setup-python v5、tesslio/setup-tessl v2），消除可变 tag 的供应链风险
+- memory 目录树与 agent-session-loop / self-evolution 统一：补 knowledge/ 三层、experience-log / experience-quickref / skill-usage-checklist 三件套、retrospective（标注写入方），保留 session_memory_*.jsonl——消除三仓库目录树互相矛盾
+- verdict 禁词自匹配误报：grep 命中先剔除禁词定义行本身再计数（meta-skill 场景 +「OK」子串误报 TOKEN/BROKEN 等），fragment-lint 新增锚点防漂移
+- runtime-audit.py 端口探测标注启发式局限（docstring + JSON `caveat` 字段 + 文本输出）：连接成功 ≠ 本项目服务存活，不作为运行态 `verified` 的唯一依据
+- 防 ping-pong 护栏：Step 7b 每次收尾至多执行一轮 DRL，收敛后不再回触重入本 skill
+
+### Changed
+- compatibility 字段如实声明：需要文件系统 + shell（PowerShell/POSIX）+ 文件搜索；无 shell 的纯 Web agent 不支持（原文 "Agent-agnostic" 超前）
+- CI 加 windows-latest runner（skills-ref 两步在 Windows 跳过：上游 CLI 静默 exit 1）；lint/eval 步骤三平台覆盖
+- .gitignore 补 `__pycache__/` 与 `.mimosa/`
+- README（中/英）补 token 成本预期；运行依赖行同步 compatibility 修订
+
 ## [1.1.2] - 2026-08-31
 
 ### Fixed
