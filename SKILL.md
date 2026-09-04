@@ -13,7 +13,7 @@ description: >-
 license: Apache-2.0
 compatibility: Requires filesystem + shell (PowerShell/POSIX - Test-Path/wc) + file search (Grep/Read); memory directory convention; subagent optional (degradation mode when absent). Shell-less web agents not supported.
 metadata:
-  version: "1.1.3"
+  version: "1.2.0"
 ---
 
 # mem-wrap-up
@@ -79,9 +79,9 @@ metadata:
 
 本 skill 涉及 memory 操作时，使用占位符路径，按你的环境替换：
 
-- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；无现成 memory 系统时在项目内建 `.agent-memory/`）
+- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）/ `~/.claude/projects`（Linux）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；`~/` 开头的路径在 macOS 与 Linux 通用；无现成 memory 系统时在项目内建 `.agent-memory/`）
 
-**路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
+**路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**首次运行回显确认**：预检通过后向用户回显「平台推断 → 实际路径」映射依据（memory_root / project-slug / date），确认后再执行 memory 写入；project-slug 目录已存在的后续运行免重复确认。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
 - `<date>` = 当日日期目录（`YYYYMMDD`）
 
@@ -126,6 +126,10 @@ metadata:
   3. **empty audit**：Read 工具检查空文件 / 只有 frontmatter 的 stub
   4. **big-file audit**：RunCommand `Get-ChildItem -Recurse | Where-Object {$_.Length -gt 50KB}` 找超大文件（macOS/Linux：`find . -type f -size +50k`）
   5. **broken-link audit**：Grep 工具 pattern `file:///|\.md\)` 找链接，逐个 Test-Path 验证目标存在（macOS/Linux：`test -e`）
+- **knowledge 层健康**（knowledge/ 目录存在时必查，防坏经验复利）：
+  1. Grep `review_status: pending`：列出全部待复核 pattern/heuristic
+  2. Grep `counter_examples: \[.+\]`：非空反例列表 → 该规则权威性已失效，列入收尾报告「待确认项」
+  3. `last_verified` 早于 30 天的 pending 规则 → 标「超期未复核，仅历史参考」，不得在后续 session 作为依据引用
 - **输出**：5 phase 报告 + 6 面状态矩阵（见下）
 
 #### 6 面状态矩阵（知识治理扩展）
@@ -194,7 +198,7 @@ metadata:
   1. **verification cost**：本 session 实证了多少 verification command（Grep/Read/RunCommand 调用计数）
   2. **throughput decoupling**：per-dim decision 跟 user final decision 分离记录（我建议 vs user 选）
   3. **ANED 3 指标**：actual vs nominal vs estimated delta（任务实际耗时 vs 名义 vs 估算差值）
-  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）；**0 发现必须附注局限**：「正则仅覆盖硬编码格式，不覆盖配置类风险（权限/未加密连接串/暴露内部 API），不作为安全审计结论」——不得以 0 发现表述为「安全通过」
+  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）；**0 发现必须附注局限**：「正则仅覆盖硬编码格式，不覆盖配置类风险（权限/未加密连接串/暴露内部 API），不作为安全审计结论」——不得以 0 发现表述为「安全通过」；**专业工具优先（可选增强）**：环境存在 gitleaks / trivy 时先跑专业工具并以输出为主证据，不可用再回退 4+1 正则 + 局限标注（降级 ≠ 跳过）
 - **必含字段**：date / session_id / milestones / retro_link
 - **Caveat**：如工作流已 sediment，不强制 Bash → Write discipline
 
@@ -206,18 +210,20 @@ metadata:
   - **Retry-on-fail**：Grep 验证失败时重新 Read + Edit（最多 3 次），3 次仍失败放弃并记录 session_memory
   - **案例不写入 user_profile.md**：历史案例归档 retrospective，user_profile.md 只放 active 规则 + 指针
 - **动作**：
-  1. 提炼本 session 的复利经验（5Why ≥3 层）
+  1. 提炼本 session 的复利经验（5Why ≥3 层为目标；证据无法支撑的层级按下方「未知标注」停止深挖，宁缺毋滥）
   2. 判断归属：用户级偏好 → user_profile.md；项目级规则 → project_memory.md；近期 topic → topics.md
   3. **Edit 前先 Read 目标文件当前内容**（user_profile.md 必须执行，project_memory.md 同理推荐）
   4. Edit 工具追加到对应文件末尾（保留编号接续，e.g.「复利经验 #N+1」）
   5. **Edit 后 Grep 验证新值落地**，失败则 Retry
   6. 如有 retrospective 文档，同步追加到项目内 retrospective
+- **5Why 未知标注（防深度幻觉）**：当前上下文（代码/日志/memory）无法支撑的层级，禁止编造因果链——写 `[未知：超出当前上下文，需跨 session/人工补充]` 并停止深挖该分支；不允许为凑满 ≥3 层而编造（与 self-evolution 的 11 维度模板同一规则）
 - **输出**：sediment 记录（编号 + 标题 + 5Why 链 + 与已有经验互补关系）
 - **记忆毕业判据**：
   - **何时毕业到 docs/规则层**：满足以下任一即从 memory 升级到权威文档
     1. 讲的是稳定机制（非一次性场景）
     2. 同一教训已反复出现（≥3 次）
     3. 接手者也必须知道（影响下次 session 恢复）
+  - **毕业前置**：来源规则的 `review_status` 必须 `reviewed` 且 `counter_examples` 为空——待复核或带反例的规则不得毕业进权威文档
   - **毕业后处置**：把结论并入 docs/README/规则文件后，memory 位置缩成指针或交给生成管线整合，**不复制成第二处真相**
   - **不毕业的情况**：一次性事故、个人偏好、未稳定的探索性结论 → 保留在 memory，不动
   - **判据应用**：Step 5 sediment 时对每条经验先过毕业判据，符合则走「毕业路径」（同步到 docs），不符合走「普通 sediment 路径」（追加到 memory）
@@ -283,11 +289,12 @@ metadata:
 - 全文 Grep 禁词：完成|PASS|12/12|闭环|OK|没问题|looks good
 - grep 命中先剔除禁词定义行本身：meta-skill 场景下目标文件内嵌的禁词清单字符串会自匹配，必须剔除含 pattern 的定义行后重新计数；「OK」子串误报（TOKEN / BROKEN 等全大写词）同理
 - 必含对抗性 verify（步骤 7 R1b，default refuted=true）
-- 必含 5Why ≥3 层（写入 sediment 段时触发）
+- 必含 5Why ≥3 层（写入 sediment 段时触发；证据无法支撑的层级按「5Why 未知标注」写 `[未知：…]` 停止深挖，不强制凑满）
 - 历史 log 文件例外（步骤 4 work-log 引用过往 verdict 不算违规）
 
 ## Failure handling
 - 任一步骤失败 → 不继续下一步，stderr 报告
+- **验证命令 exit code ≠ 0 → 按工具失败处理**，不继续下一步；不得把命令报错输出解释为业务结论（e.g. 区分「git 说没 track」与「git 命令报错」），无法区分 → 标 `unverifiable` 并询问用户
 - subagent idle fallback：子代理报告「信息不足/上下文缺失」（NEEDS_CONTEXT 或等价信号）≥3 走 fallback prompt（缩小 scope + 给具体 file:line）
 - Token 超额（步骤 7 R1a 派 3 subagent）→ abort 走 3 选 1：
   1. 降级为 1 subagent（牺牲 coverage）
