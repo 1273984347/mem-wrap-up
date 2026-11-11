@@ -9,7 +9,7 @@ description: >-
   7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check →
   复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/继续」、
   工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
-  不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）。
+  不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）、需要"复检→收尾→沉淀"完整闭环的整段会话（用 agent-session-loop——独立收尾场景才归本 skill）。
 license: Apache-2.0
 compatibility: Requires filesystem + shell (PowerShell/POSIX - Test-Path/wc) + file search (Grep/Read); memory directory convention; subagent optional (degradation mode when absent). Shell-less web agents not supported.
 metadata:
@@ -79,7 +79,7 @@ metadata:
 
 本 skill 涉及 memory 操作时，使用占位符路径，按你的环境替换：
 
-- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）/ `~/.claude/projects`（Linux）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；`~/` 开头的路径在 macOS 与 Linux 通用；无现成 memory 系统时在项目内建 `.agent-memory/`）
+- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）/ `~/.claude/projects`（Linux）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；ZCode `~/.zcode/cli/memories/projects/<project-slug>/memory/`；`~/` 开头的路径在 macOS 与 Linux 通用；无现成 memory 系统时在项目内建 `.agent-memory/`）
 
 **路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**首次运行回显确认**：预检通过后向用户回显「平台推断 → 实际路径」映射依据（memory_root / project-slug / date），确认后再执行 memory 写入；project-slug 目录已存在的后续运行免重复确认。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
