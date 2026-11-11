@@ -145,7 +145,7 @@ metadata:
 | 记忆 | 快照是否仍准确且允许修改？ | user_profile/project_memory/topics、索引 | <状态> |
 | 工作区 | 是否仍有未集成或未审计的残留？ | 会话残留文件、worktree、分支、临时库 | <状态> |
 
-**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随插件分发，位于 `<plugins>/mem-wrap-up/scripts/runtime-audit.py`（`<plugins>` = 本 skill 安装目录）；目标项目内未放置脚本时，用插件路径调用：`python <plugins>/mem-wrap-up/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。**端口探测是启发式**：连接成功 ≠ 本项目服务存活（可能是同端口的其他本地服务），证据按启发式标注，不作为运行态 `verified` 的唯一依据。
+**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随本 skill 分发，位于本 skill 目录的 `scripts/runtime-audit.py`；目标项目内未放置脚本时，用 skill 目录绝对路径调用：`python <本 skill 目录>/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。**端口探测是启发式**：连接成功 ≠ 本项目服务存活（可能是同端口的其他本地服务），证据按启发式标注，不作为运行态 `verified` 的唯一依据。
 
 **判定原则**：
 - 小项目不必硬凑六面：没有部署 → 运行态标 `not-applicable`；无记忆系统 → 记忆面标 `not-applicable`，不编造证据
