@@ -3,14 +3,15 @@ name: mem-wrap-up
 description: >-
   Enforces a 7-step session wrap-up pipeline: memory health check, 5-phase memory audit, fileCount sync,
   doc sync spot-check, heuristic sedimentation, 4-step verify, and memory-layer sync + deep-review-loop.
-  Trigger at session end, when the user says "wrap up / 收尾 / 继续", when a workflow has been
-  sedimented, or when docs and code mismatch — even without the exact words. Do not trigger for deep
-  review of written artifacts (use deep-review-loop) or retro/sedimentation analysis (use self-evolution).
+  Trigger at session end, when the user says "wrap up / 收尾 / session 收尾", when a workflow has been
+  sedimented and the user says "继续", or when docs and code mismatch — even without the exact words.
+  Do not trigger for deep review of written artifacts (use deep-review-loop), retro/sedimentation analysis
+  (use self-evolution), or a full three-stage close-out (use agent-session-loop).
   7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check →
-  复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/继续」、
-  工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
+  复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/wrap up」、
+  工作流已沉淀且用户说「继续」、或文档与代码不一致时触发（即使未点名）。
   不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）、需要"复检→收尾→沉淀"完整闭环的整段会话（用 agent-session-loop——独立收尾场景才归本 skill）。
-license: Apache-2.0
+# license: Apache-2.0 —— 已移出 frontmatter（Mavis 不识别该键）；许可证全文见 repo/LICENSE
 compatibility: Requires filesystem + shell (PowerShell/POSIX - Test-Path/wc) + file search (Grep/Read); memory directory convention; subagent optional (degradation mode when absent). Shell-less web agents not supported.
 metadata:
   version: "1.2.0"
@@ -279,11 +280,13 @@ metadata:
 - **R1b 硬性要求继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 R1b 硬性要求声明（R1b finding 必须附工具调用证据 / R1b 0 finding 也必须附证据 / R1b class-level enumeration 必须列出 ALL affected files 清单 / R1b 严重度降级必须附依据 / 违反处置）。与 R1a 硬性要求对齐，subagent 无文档访问权限，必须 inline 完整声明
 - **R1b 反模式清单继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 7 项反模式清单（silent skip / 正例 bias / 0 finding 滥用 / 严重度降级 / class-level 偷懒 / residual 敷衍 / 工具证据缺失），subagent 必须自检是否触发任一反模式
 
-## 触发条件
+## 进入收尾的时机（触发判定见 frontmatter description）
 - 用户说「收尾」/「wrap up」/「session 收尾」
-- 用户说「继续」但工作流已 sediment（context-window-aware session）
+- 工作流已 sediment 且用户说「继续」（context-window-aware session）
 - 主动判断：session 已跑 30+ 轮 / token 接近上限 / 重大里程碑达成
 - 怀疑 session 不完整收尾（e.g. 修复后未 verify、sediment 未沉淀）
+
+本节只列「何时进入收尾」；**该不该由哪个 skill 接手**的判定一律以 frontmatter description 为准。
 
 ## Verdict 字眼合规自检
 - 全文 Grep 禁词：完成|PASS|12/12|闭环|OK|没问题|looks good
