@@ -3,17 +3,18 @@ name: mem-wrap-up
 description: >-
   Enforces a 7-step session wrap-up pipeline: memory health check, 5-phase memory audit, fileCount sync,
   doc sync spot-check, heuristic sedimentation, 4-step verify, and memory-layer sync + deep-review-loop.
-  Trigger at session end, when the user says "wrap up / 收尾 / 继续", when a workflow has been
-  sedimented, or when docs and code mismatch — even without the exact words. Do not trigger for deep
-  review of written artifacts (use deep-review-loop) or retro/sedimentation analysis (use self-evolution).
+  Trigger at session end, when the user says "wrap up / 收尾 / session 收尾", when a workflow has been
+  sedimented and the user says "继续", or when docs and code mismatch — even without the exact words.
+  Do not trigger for deep review of written artifacts (use deep-review-loop), retro/sedimentation analysis
+  (use self-evolution), or a full three-stage close-out (use agent-session-loop).
   7 步 session 收尾流水线：memory 健康检查 → 5 phase 审计 → fileCount 同步 → 文档同步 spot-check →
-  复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/继续」、
-  工作流已沉淀、或文档与代码不一致时触发（即使未点名）。
-  不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）。
-license: Apache-2.0
+  复利经验沉淀 → 4 步 verify → memory 层同步 + 深度复检。session 收尾、用户说「收尾/wrap up」、
+  工作流已沉淀且用户说「继续」、或文档与代码不一致时触发（即使未点名）。
+  不触发：书面产物深度复检（用 deep-review-loop）、复盘/沉淀分析（用 self-evolution）、需要"复检→收尾→沉淀"完整闭环的整段会话（用 agent-session-loop——独立收尾场景才归本 skill）。
+# license: Apache-2.0 —— 已移出 frontmatter（Mavis 不识别该键）；许可证全文见 repo/LICENSE
 compatibility: Requires filesystem + shell (PowerShell/POSIX - Test-Path/wc) + file search (Grep/Read); memory directory convention; subagent optional (degradation mode when absent). Shell-less web agents not supported.
 metadata:
-  version: "1.1.3"
+  version: "1.2.0"
 ---
 
 # mem-wrap-up
@@ -79,9 +80,9 @@ metadata:
 
 本 skill 涉及 memory 操作时，使用占位符路径，按你的环境替换：
 
-- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；无现成 memory 系统时在项目内建 `.agent-memory/`）
+- `<memory_root>` = agent 的 memory 根目录（按平台映射：TRAE `~/.trae-cn/memory`；Claude Code `%USERPROFILE%\.claude\projects`（Windows）/ `~/Library/Application Support/Claude/projects`（macOS）/ `~/.claude/projects`（Linux）；WorkBuddy `~/.workbuddy/memory/` 或项目内 `.workbuddy/memory/`；ZCode `~/.zcode/cli/memories/projects/<project-slug>/memory/`；`~/` 开头的路径在 macOS 与 Linux 通用；无现成 memory 系统时在项目内建 `.agent-memory/`）
 
-**路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
+**路径预检（首次运行强制）**：用占位符前先验证路径存在（`test -e` / `Test-Path`）；预检失败 → 中断问用户，不允许猜路径继续。**首次运行回显确认**：预检通过后向用户回显「平台推断 → 实际路径」映射依据（memory_root / project-slug / date），确认后再执行 memory 写入；project-slug 目录已存在的后续运行免重复确认。**Grep 空结果判别**：Grep 0 hits 时先用 `test -e` 区分「路径错误」与「真无匹配」，无法区分时标 `unverifiable` 询问用户，不得把空结果当通过。
 - `<project-slug>` = 当前 workspace 对应的 memory 项目目录名（执行时按当前 cwd 映射）
 - `<date>` = 当日日期目录（`YYYYMMDD`）
 
@@ -126,6 +127,10 @@ metadata:
   3. **empty audit**：Read 工具检查空文件 / 只有 frontmatter 的 stub
   4. **big-file audit**：RunCommand `Get-ChildItem -Recurse | Where-Object {$_.Length -gt 50KB}` 找超大文件（macOS/Linux：`find . -type f -size +50k`）
   5. **broken-link audit**：Grep 工具 pattern `file:///|\.md\)` 找链接，逐个 Test-Path 验证目标存在（macOS/Linux：`test -e`）
+- **knowledge 层健康**（knowledge/ 目录存在时必查，防坏经验复利）：
+  1. Grep `review_status: pending`：列出全部待复核 pattern/heuristic
+  2. Grep `counter_examples: \[.+\]`：非空反例列表 → 该规则权威性已失效，列入收尾报告「待确认项」
+  3. `last_verified` 早于 30 天的 pending 规则 → 标「超期未复核，仅历史参考」，不得在后续 session 作为依据引用
 - **输出**：5 phase 报告 + 6 面状态矩阵（见下）
 
 #### 6 面状态矩阵（知识治理扩展）
@@ -141,7 +146,7 @@ metadata:
 | 记忆 | 快照是否仍准确且允许修改？ | user_profile/project_memory/topics、索引 | <状态> |
 | 工作区 | 是否仍有未集成或未审计的残留？ | 会话残留文件、worktree、分支、临时库 | <状态> |
 
-**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随插件分发，位于 `<plugins>/mem-wrap-up/scripts/runtime-audit.py`（`<plugins>` = 本 skill 安装目录）；目标项目内未放置脚本时，用插件路径调用：`python <plugins>/mem-wrap-up/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。**端口探测是启发式**：连接成功 ≠ 本项目服务存活（可能是同端口的其他本地服务），证据按启发式标注，不作为运行态 `verified` 的唯一依据。
+**运行态面优先用脚本**：项目根目录存在 `scripts/runtime-audit.py` 时，运行态面直接跑它（只读探测：配置端口监听 / 健康端点 / 部署标记 / 构建产物是否过期），用输出作为该面证据；脚本不可用或非项目环境（如无部署的纯文档 session）再手动验证，标 `not-applicable`，不编造证据。脚本随本 skill 分发，位于本 skill 目录的 `scripts/runtime-audit.py`；目标项目内未放置脚本时，用 skill 目录绝对路径调用：`python <本 skill 目录>/scripts/runtime-audit.py --project-dir .`（脚本纯 stdlib 只读，跨平台）。**端口探测是启发式**：连接成功 ≠ 本项目服务存活（可能是同端口的其他本地服务），证据按启发式标注，不作为运行态 `verified` 的唯一依据。
 
 **判定原则**：
 - 小项目不必硬凑六面：没有部署 → 运行态标 `not-applicable`；无记忆系统 → 记忆面标 `not-applicable`，不编造证据
@@ -194,7 +199,7 @@ metadata:
   1. **verification cost**：本 session 实证了多少 verification command（Grep/Read/RunCommand 调用计数）
   2. **throughput decoupling**：per-dim decision 跟 user final decision 分离记录（我建议 vs user 选）
   3. **ANED 3 指标**：actual vs nominal vs estimated delta（任务实际耗时 vs 名义 vs 估算差值）
-  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）；**0 发现必须附注局限**：「正则仅覆盖硬编码格式，不覆盖配置类风险（权限/未加密连接串/暴露内部 API），不作为安全审计结论」——不得以 0 发现表述为「安全通过」
+  4. **session-end security scan**：4+1 pattern grep（敏感信息 / 密钥 / token / 内部 URL / PII）；**0 发现必须附注局限**：「正则仅覆盖硬编码格式，不覆盖配置类风险（权限/未加密连接串/暴露内部 API），不作为安全审计结论」——不得以 0 发现表述为「安全通过」；**专业工具优先（可选增强）**：环境存在 gitleaks / trivy 时先跑专业工具并以输出为主证据，不可用再回退 4+1 正则 + 局限标注（降级 ≠ 跳过）
 - **必含字段**：date / session_id / milestones / retro_link
 - **Caveat**：如工作流已 sediment，不强制 Bash → Write discipline
 
@@ -206,18 +211,20 @@ metadata:
   - **Retry-on-fail**：Grep 验证失败时重新 Read + Edit（最多 3 次），3 次仍失败放弃并记录 session_memory
   - **案例不写入 user_profile.md**：历史案例归档 retrospective，user_profile.md 只放 active 规则 + 指针
 - **动作**：
-  1. 提炼本 session 的复利经验（5Why ≥3 层）
+  1. 提炼本 session 的复利经验（5Why ≥3 层为目标；证据无法支撑的层级按下方「未知标注」停止深挖，宁缺毋滥）
   2. 判断归属：用户级偏好 → user_profile.md；项目级规则 → project_memory.md；近期 topic → topics.md
   3. **Edit 前先 Read 目标文件当前内容**（user_profile.md 必须执行，project_memory.md 同理推荐）
   4. Edit 工具追加到对应文件末尾（保留编号接续，e.g.「复利经验 #N+1」）
   5. **Edit 后 Grep 验证新值落地**，失败则 Retry
   6. 如有 retrospective 文档，同步追加到项目内 retrospective
+- **5Why 未知标注（防深度幻觉）**：当前上下文（代码/日志/memory）无法支撑的层级，禁止编造因果链——写 `[未知：超出当前上下文，需跨 session/人工补充]` 并停止深挖该分支；不允许为凑满 ≥3 层而编造（与 self-evolution 的 11 维度模板同一规则）
 - **输出**：sediment 记录（编号 + 标题 + 5Why 链 + 与已有经验互补关系）
 - **记忆毕业判据**：
   - **何时毕业到 docs/规则层**：满足以下任一即从 memory 升级到权威文档
     1. 讲的是稳定机制（非一次性场景）
     2. 同一教训已反复出现（≥3 次）
     3. 接手者也必须知道（影响下次 session 恢复）
+  - **毕业前置**：来源规则的 `review_status` 必须 `reviewed` 且 `counter_examples` 为空——待复核或带反例的规则不得毕业进权威文档
   - **毕业后处置**：把结论并入 docs/README/规则文件后，memory 位置缩成指针或交给生成管线整合，**不复制成第二处真相**
   - **不毕业的情况**：一次性事故、个人偏好、未稳定的探索性结论 → 保留在 memory，不动
   - **判据应用**：Step 5 sediment 时对每条经验先过毕业判据，符合则走「毕业路径」（同步到 docs），不符合走「普通 sediment 路径」（追加到 memory）
@@ -273,21 +280,24 @@ metadata:
 - **R1b 硬性要求继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 R1b 硬性要求声明（R1b finding 必须附工具调用证据 / R1b 0 finding 也必须附证据 / R1b class-level enumeration 必须列出 ALL affected files 清单 / R1b 严重度降级必须附依据 / 违反处置）。与 R1a 硬性要求对齐，subagent 无文档访问权限，必须 inline 完整声明
 - **R1b 反模式清单继承**：本 skill Step 7 调用 DRL 时，R1b subagent prompt 必须包含 DRL 的 7 项反模式清单（silent skip / 正例 bias / 0 finding 滥用 / 严重度降级 / class-level 偷懒 / residual 敷衍 / 工具证据缺失），subagent 必须自检是否触发任一反模式
 
-## 触发条件
+## 进入收尾的时机（触发判定见 frontmatter description）
 - 用户说「收尾」/「wrap up」/「session 收尾」
-- 用户说「继续」但工作流已 sediment（context-window-aware session）
+- 工作流已 sediment 且用户说「继续」（context-window-aware session）
 - 主动判断：session 已跑 30+ 轮 / token 接近上限 / 重大里程碑达成
 - 怀疑 session 不完整收尾（e.g. 修复后未 verify、sediment 未沉淀）
+
+本节只列「何时进入收尾」；**该不该由哪个 skill 接手**的判定一律以 frontmatter description 为准。
 
 ## Verdict 字眼合规自检
 - 全文 Grep 禁词：完成|PASS|12/12|闭环|OK|没问题|looks good
 - grep 命中先剔除禁词定义行本身：meta-skill 场景下目标文件内嵌的禁词清单字符串会自匹配，必须剔除含 pattern 的定义行后重新计数；「OK」子串误报（TOKEN / BROKEN 等全大写词）同理
 - 必含对抗性 verify（步骤 7 R1b，default refuted=true）
-- 必含 5Why ≥3 层（写入 sediment 段时触发）
+- 必含 5Why ≥3 层（写入 sediment 段时触发；证据无法支撑的层级按「5Why 未知标注」写 `[未知：…]` 停止深挖，不强制凑满）
 - 历史 log 文件例外（步骤 4 work-log 引用过往 verdict 不算违规）
 
 ## Failure handling
 - 任一步骤失败 → 不继续下一步，stderr 报告
+- **验证命令 exit code ≠ 0 → 按工具失败处理**，不继续下一步；不得把命令报错输出解释为业务结论（e.g. 区分「git 说没 track」与「git 命令报错」），无法区分 → 标 `unverifiable` 并询问用户
 - subagent idle fallback：子代理报告「信息不足/上下文缺失」（NEEDS_CONTEXT 或等价信号）≥3 走 fallback prompt（缩小 scope + 给具体 file:line）
 - Token 超额（步骤 7 R1a 派 3 subagent）→ abort 走 3 选 1：
   1. 降级为 1 subagent（牺牲 coverage）

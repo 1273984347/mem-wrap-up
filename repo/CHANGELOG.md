@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-05
+
+### Added
+- 步骤 2 memory audit 新增 knowledge 层健康检查（knowledge/ 目录存在时必查，防坏经验复利）：`review_status: pending` 清单、`counter_examples` 非空 → 权威性失效列入「待确认项」、pending 超期 30 天降权「仅历史参考」
+- 记忆毕业判据新增毕业前置：来源规则 `review_status` 必须 `reviewed` 且 `counter_examples` 为空——待复核或带反例的规则不得毕业进权威文档
+- 步骤 5 sediment 新增 5Why 未知标注（防深度幻觉）：证据无法支撑的层级写 `[未知：超出当前上下文]` 停止深挖，不强制凑满 ≥3 层，禁止编造因果链（对齐 self-evolution 模板既有规则）
+- 4b 安全扫描专业工具优先（可选增强）：环境存在 gitleaks / trivy 时先跑专业工具并以输出为主证据，不可用回退 4+1 正则 + 局限标注（降级 ≠ 跳过）
+- Failure handling 新增验证命令通用细则：exit code ≠ 0 → 按工具失败处理，不得把命令报错输出解释为业务结论（区分「git 说没 track」与「git 命令报错」）
+- 路径预检新增首次运行回显确认：预检通过后向用户回显「平台推断 → 实际路径」映射依据，确认后再执行 memory 写入
+
+### Changed
+- memory 路径约定补 Linux 显式映射（Claude Code `~/.claude/projects`），注明 `~/` 开头路径在 macOS 与 Linux 通用
+
 ## [1.1.3] - 2026-09-04
 
 ### Fixed
